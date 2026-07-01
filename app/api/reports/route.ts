@@ -3,14 +3,19 @@ import ExcelJS from "exceljs";
 import { Readable } from "stream";
 import { anthropic, CLAUDE_MODEL, DOTSURE_GUARDRAILS } from "@/lib/anthropic";
 import { createClient } from "@/lib/supabase-server";
+import { createAdminClient } from "@/lib/supabase-admin";
 import { getKnowledgeBlock } from "@/lib/knowledge";
+
+// Parsing a large workbook plus the Claude call can run past the default
+// serverless timeout - extend it. (Hobby plans cap at 60s regardless.)
+export const maxDuration = 60;
 
 const SKIP_AUTH = process.env.NEXT_PUBLIC_SKIP_AUTH === "true";
 const MAX_ROWS = 500;
-// Vercel serverless functions hard-cap the request body at 4.5MB - stay
-// under that (with headroom for multipart overhead) so our own check fires
-// with a friendly message instead of the platform rejecting it outright.
-const MAX_FILE_BYTES = 4 * 1024 * 1024;
+// Files upload directly to Supabase Storage from the browser, bypassing
+// Vercel's serverless function request-size limit entirely - this only
+// bounds how much we're willing to parse and analyse in one run.
+const MAX_FILE_BYTES = 15 * 1024 * 1024;
 
 function rowsToText(worksheet: ExcelJS.Worksheet) {
   const lines: string[] = [];
@@ -27,15 +32,13 @@ function rowsToText(worksheet: ExcelJS.Worksheet) {
 }
 
 export async function POST(req: NextRequest) {
-  const formData = await req.formData();
-  const file = formData.get("file") as File | null;
+  const { storagePath, filename } = (await req.json()) as {
+    storagePath?: string;
+    filename?: string;
+  };
 
-  if (!file) {
-    return new Response("No file provided", { status: 400 });
-  }
-
-  if (file.size > MAX_FILE_BYTES) {
-    return new Response("File too large - 4MB limit", { status: 400 });
+  if (!storagePath || !filename) {
+    return new Response("Missing storagePath or filename", { status: 400 });
   }
 
   const supabase = await createClient();
@@ -47,8 +50,21 @@ export async function POST(req: NextRequest) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const isCsv = file.name.toLowerCase().endsWith(".csv");
+  const admin = createAdminClient();
+  const { data: fileBlob, error: downloadError } = await admin.storage
+    .from("reports")
+    .download(storagePath);
+
+  if (downloadError || !fileBlob) {
+    return new Response("Could not retrieve the uploaded file", { status: 400 });
+  }
+
+  if (fileBlob.size > MAX_FILE_BYTES) {
+    return new Response("File too large - 15MB limit", { status: 400 });
+  }
+
+  const buffer = Buffer.from(await fileBlob.arrayBuffer());
+  const isCsv = filename.toLowerCase().endsWith(".csv");
   const workbook = new ExcelJS.Workbook();
 
   try {
@@ -98,7 +114,7 @@ ${knowledgeBlock}
 
 ${DOTSURE_GUARDRAILS}
 
-You have been given tabular data extracted from a file named "${file.name}"${
+You have been given tabular data extracted from a file named "${filename}"${
     truncated ? ` (truncated to the first ${MAX_ROWS} rows)` : ""
   }. The first row is likely the header row.
 
@@ -132,7 +148,8 @@ Be direct and commercially minded. No filler. British English throughout.`;
         if (user) {
           await supabase.from("ReportAnalysis").insert({
             user_id: user.id,
-            filename: file.name,
+            filename,
+            file_url: storagePath,
             analysis: fullText,
             data_type: isCsv ? "csv" : "xlsx",
           });

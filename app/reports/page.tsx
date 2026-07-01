@@ -12,9 +12,10 @@ export default function ReportsPage() {
   const [reports, setReports] = useState<ReportSummary[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [analysis, setAnalysis] = useState("");
-  const [analyzing, setAnalyzing] = useState(false);
+  const [stage, setStage] = useState<"idle" | "uploading" | "analysing">("idle");
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const busy = stage !== "idle";
 
   const loadReports = useCallback(async () => {
     if (!user) return;
@@ -47,22 +48,33 @@ export default function ReportsPage() {
 
   async function handleAnalyze(e: React.FormEvent) {
     e.preventDefault();
-    if (!file || analyzing) return;
+    if (!file || busy || !user) return;
     setError(null);
     setAnalysis("");
-    setAnalyzing(true);
+    setStage("uploading");
 
-    const formData = new FormData();
-    formData.append("file", file);
+    const storagePath = `${user.id}/${Date.now()}-${file.name}`;
+    const { error: uploadError } = await supabase.storage
+      .from("reports")
+      .upload(storagePath, file);
+
+    if (uploadError) {
+      setError(uploadError.message);
+      setStage("idle");
+      return;
+    }
+
+    setStage("analysing");
 
     const res = await fetch("/api/reports", {
       method: "POST",
-      body: formData,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ storagePath, filename: file.name }),
     });
 
     if (!res.ok || !res.body) {
       setError((await res.text()) || "Something went wrong analysing this file.");
-      setAnalyzing(false);
+      setStage("idle");
       return;
     }
 
@@ -77,7 +89,7 @@ export default function ReportsPage() {
       setAnalysis(acc);
     }
 
-    setAnalyzing(false);
+    setStage("idle");
     setFile(null);
     loadReports();
   }
@@ -100,8 +112,15 @@ export default function ReportsPage() {
           >
             {file ? file.name : "Choose file"}
           </label>
-          <button type="submit" disabled={!file || analyzing} className="btn-primary">
-            {analyzing ? "Analysing..." : "Analyse"}
+          {!user && (
+            <p className="text-text-muted text-xs">Sign in to upload a file.</p>
+          )}
+          <button type="submit" disabled={!file || busy || !user} className="btn-primary">
+            {stage === "uploading"
+              ? "Uploading..."
+              : stage === "analysing"
+              ? "Analysing..."
+              : "Analyse"}
           </button>
         </form>
 
@@ -133,7 +152,7 @@ export default function ReportsPage() {
           {error && <p className="text-danger text-sm mb-3">{error}</p>}
           {!analysis && !error && (
             <p className="text-text-muted text-sm">
-              Upload an Excel or CSV file (max 4MB) to get a Summary, Insights,
+              Upload an Excel or CSV file (max 15MB) to get a Summary, Insights,
               Action Steps, and Risks - what the data says and what to do about it.
             </p>
           )}
