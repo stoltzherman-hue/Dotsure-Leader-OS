@@ -1,20 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --bg-base: #0a0f1a;
-  --bg-surface: #111827;
-  --bg-elevated: #1a2234;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-active: rgba(0, 151, 167, 0.4);
-  --teal: #0097A7;
-  --teal-dim: rgba(0, 151, 167, 0.15);
-  --coral: #FF6B35;
-  --text-primary: #f9fafb;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
+  --bg-base: #ffffff;
+  --bg-surface: #f3f5f7;
+  --bg-elevated: #ffffff;
+  --border: rgba(34, 40, 45, 0.1);
+  --border-active: rgba(132, 0, 219, 0.4);
+  --orange: #ff8700;
+  --orange-dim: rgba(255, 135, 0, 0.12);
+  --purple: #8400db;
+  --purple-dim: rgba(132, 0, 219, 0.1);
+  --text-primary: #22282d;
+  --text-secondary: #5e6770;
+  --text-muted: #8b949d;
+  --text-on-accent: #ffffff;
   --success: #22a06b;
   --warning: #f59e0b;
-  --danger: #e5483d;
+  --danger: #f04f23;
 }
 
 @theme inline {
@@ -23,9 +25,10 @@
   --color-bg-elevated: var(--bg-elevated);
   --color-border: var(--border);
   --color-border-active: var(--border-active);
-  --color-teal: var(--teal);
-  --color-teal-dim: var(--teal-dim);
-  --color-coral: var(--coral);
+  --color-orange: var(--orange);
+  --color-orange-dim: var(--orange-dim);
+  --color-purple: var(--purple);
+  --color-purple-dim: var(--purple-dim);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
@@ -55,15 +58,15 @@ body {
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: 12px;
-  backdrop-filter: blur(12px);
+  box-shadow: 0 1px 2px rgba(34, 40, 45, 0.04), 0 1px 6px rgba(34, 40, 45, 0.05);
 }
 
 .btn-primary {
-  background: var(--teal);
-  color: var(--text-primary);
+  background: var(--purple);
+  color: var(--text-on-accent);
   font-weight: 700;
   border-radius: 8px;
   padding: 10px 20px;
@@ -109,7 +112,7 @@ body {
 }
 
 .nav-item-active {
-  color: var(--teal);
-  border-left: 3px solid var(--teal);
-  background: var(--teal-dim);
+  color: var(--orange);
+  border-left: 3px solid var(--orange);
+  background: var(--orange-dim);
 }

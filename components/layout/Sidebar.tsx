@@ -21,7 +21,7 @@ export function Sidebar() {
     <aside className="w-[220px] shrink-0 h-screen sticky top-0 flex flex-col bg-bg-surface border-r border-border">
       <div className="px-5 py-5">
         <h1 className="text-base font-bold text-text-primary">
-          Dotsure <span className="text-teal">Leader OS</span>
+          Dotsure <span className="text-orange">Leader OS</span>
         </h1>
       </div>
 

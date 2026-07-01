@@ -140,8 +140,8 @@ export default function WorkspacePage() {
               key={i}
               className={`max-w-2xl px-4 py-3 rounded-xl text-sm whitespace-pre-wrap ${
                 m.role === "user"
-                  ? "self-end bg-teal-dim"
-                  : "self-start bg-bg-elevated"
+                  ? "self-end bg-orange-dim"
+                  : "self-start bg-bg-surface"
               }`}
             >
               {m.content || (m.role === "assistant" && sending ? "..." : "")}

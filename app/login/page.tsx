@@ -47,7 +47,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-text-primary">
-            Dotsure <span className="text-teal">Leader OS</span>
+            Dotsure <span className="text-orange">Leader OS</span>
           </h1>
           <p className="text-text-secondary text-sm mt-1">
             AI operating system for Dotsure leaders

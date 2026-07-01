@@ -76,7 +76,7 @@ export function AIPanel({ onClose }: { onClose?: () => void }) {
           <div
             key={i}
             className={`card px-3 py-2 text-sm whitespace-pre-wrap ${
-              m.role === "user" ? "bg-teal-dim" : ""
+              m.role === "user" ? "bg-orange-dim" : ""
             }`}
           >
             {m.content || (m.role === "assistant" && sending ? "..." : "")}
