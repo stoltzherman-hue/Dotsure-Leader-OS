@@ -11,14 +11,16 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setInfo(null);
     setLoading(true);
 
-    const { error: authError } =
+    const { data, error: authError } =
       mode === "signin"
         ? await supabase.auth.signInWithPassword({ email, password })
         : await supabase.auth.signUp({ email, password });
@@ -27,6 +29,12 @@ export default function LoginPage() {
 
     if (authError) {
       setError(authError.message);
+      return;
+    }
+
+    if (!data.session) {
+      setInfo("Check your email to confirm your account, then sign in.");
+      setMode("signin");
       return;
     }
 
@@ -78,6 +86,7 @@ export default function LoginPage() {
             />
           </div>
 
+          {info && <p className="text-success text-sm">{info}</p>}
           {error && <p className="text-danger text-sm">{error}</p>}
 
           <button type="submit" disabled={loading} className="btn-primary">

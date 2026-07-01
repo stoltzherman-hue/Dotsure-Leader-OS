@@ -42,7 +42,7 @@ export function Sidebar() {
 
       <div className="px-5 py-4 border-t border-border">
         <p className="text-text-primary text-sm font-medium truncate">
-          {profile?.full_name || "Loading..."}
+          {profile?.full_name || "Test mode"}
         </p>
         <p className="text-text-muted text-xs truncate">
           {profile?.department || ""}

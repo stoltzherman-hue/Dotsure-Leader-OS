@@ -4,6 +4,10 @@ import { createClient } from "@/lib/supabase-server";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
+// TEMPORARY: bypass login while Supabase email auth is unavailable.
+// Set NEXT_PUBLIC_SKIP_AUTH=false once auth is working again.
+const SKIP_AUTH = process.env.NEXT_PUBLIC_SKIP_AUTH === "true";
+
 export async function POST(req: NextRequest) {
   const { messages, conversationId, save } = (await req.json()) as {
     messages: ChatMessage[];
@@ -16,12 +20,16 @@ export async function POST(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user && !SKIP_AUTH) {
     return new Response("Unauthorized", { status: 401 });
   }
 
+  const canPersist = !!user && !!save;
+
   const [{ data: profile }, { data: systemContext }] = await Promise.all([
-    supabase.from("UserProfile").select("*").eq("id", user.id).maybeSingle(),
+    user
+      ? supabase.from("UserProfile").select("*").eq("id", user.id).maybeSingle()
+      : Promise.resolve({ data: null }),
     supabase
       .from("SystemContext")
       .select("content")
@@ -44,11 +52,11 @@ Be direct, professional, and immediately useful. Draft, analyse, and advise at s
 
   let activeConversationId = conversationId || null;
 
-  if (save && !activeConversationId) {
+  if (canPersist && !activeConversationId) {
     const { data: created } = await supabase
       .from("Conversation")
       .insert({
-        user_id: user.id,
+        user_id: user!.id,
         title: messages[0]?.content?.slice(0, 60) || "New conversation",
         module: "workspace",
         messages,
@@ -76,7 +84,7 @@ Be direct, professional, and immediately useful. Draft, analyse, and advise at s
       });
 
       claudeStream.on("end", async () => {
-        if (save && activeConversationId) {
+        if (canPersist && activeConversationId) {
           await supabase
             .from("Conversation")
             .update({
@@ -84,7 +92,7 @@ Be direct, professional, and immediately useful. Draft, analyse, and advise at s
               updated_at: new Date().toISOString(),
             })
             .eq("id", activeConversationId)
-            .eq("user_id", user.id);
+            .eq("user_id", user!.id);
         }
         controller.close();
       });

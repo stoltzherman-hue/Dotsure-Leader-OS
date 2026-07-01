@@ -7,6 +7,10 @@ import { AppShell } from "./AppShell";
 
 const PUBLIC_PATHS = ["/login"];
 
+// TEMPORARY: bypass login while Supabase email auth is unavailable.
+// Set NEXT_PUBLIC_SKIP_AUTH=false once auth is working again.
+const SKIP_AUTH = process.env.NEXT_PUBLIC_SKIP_AUTH === "true";
+
 function LoadingScreen() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg-base">
@@ -25,7 +29,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   const needsOnboarding = !!user && !!profile && !profile.onboarded;
 
   useEffect(() => {
-    if (loading) return;
+    if (SKIP_AUTH || loading) return;
 
     if (!user && !isPublic) {
       router.replace("/login");
@@ -37,6 +41,8 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       router.replace("/workspace");
     }
   }, [loading, user, isPublic, isOnboarding, needsOnboarding, router]);
+
+  if (SKIP_AUTH) return <AppShell>{children}</AppShell>;
 
   if (loading) return <LoadingScreen />;
 
