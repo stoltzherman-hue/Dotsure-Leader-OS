@@ -133,7 +133,7 @@ export default function ReportsPage() {
           {error && <p className="text-danger text-sm mb-3">{error}</p>}
           {!analysis && !error && (
             <p className="text-text-muted text-sm">
-              Upload an Excel or CSV file (max 5MB) to get a Summary, Insights,
+              Upload an Excel or CSV file (max 4MB) to get a Summary, Insights,
               Action Steps, and Risks - what the data says and what to do about it.
             </p>
           )}

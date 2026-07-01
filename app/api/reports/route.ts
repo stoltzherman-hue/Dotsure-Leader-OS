@@ -7,7 +7,10 @@ import { getKnowledgeBlock } from "@/lib/knowledge";
 
 const SKIP_AUTH = process.env.NEXT_PUBLIC_SKIP_AUTH === "true";
 const MAX_ROWS = 500;
-const MAX_FILE_BYTES = 5 * 1024 * 1024;
+// Vercel serverless functions hard-cap the request body at 4.5MB - stay
+// under that (with headroom for multipart overhead) so our own check fires
+// with a friendly message instead of the platform rejecting it outright.
+const MAX_FILE_BYTES = 4 * 1024 * 1024;
 
 function rowsToText(worksheet: ExcelJS.Worksheet) {
   const lines: string[] = [];
@@ -32,7 +35,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (file.size > MAX_FILE_BYTES) {
-    return new Response("File too large - 5MB limit", { status: 400 });
+    return new Response("File too large - 4MB limit", { status: 400 });
   }
 
   const supabase = await createClient();
