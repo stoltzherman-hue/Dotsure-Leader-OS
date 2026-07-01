@@ -88,11 +88,18 @@ export default function ReportsPage() {
         <form onSubmit={handleAnalyze} className="card p-4 flex flex-col gap-3">
           <p className="label">Upload</p>
           <input
+            id="report-file"
             type="file"
             accept=".csv,.xlsx,.xls"
             onChange={(e) => setFile(e.target.files?.[0] || null)}
-            className="text-sm text-text-secondary"
+            className="hidden"
           />
+          <label
+            htmlFor="report-file"
+            className="input-field cursor-pointer text-center text-text-secondary hover:text-text-primary"
+          >
+            {file ? file.name : "Choose file"}
+          </label>
           <button type="submit" disabled={!file || analyzing} className="btn-primary">
             {analyzing ? "Analysing..." : "Analyse"}
           </button>
