@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { anthropic, CLAUDE_MODEL, DOTSURE_GUARDRAILS } from "@/lib/anthropic";
 import { createClient } from "@/lib/supabase-server";
+import { getKnowledgeBlock } from "@/lib/knowledge";
 
 const SKIP_AUTH = process.env.NEXT_PUBLIC_SKIP_AUTH === "true";
 
@@ -16,16 +17,20 @@ export async function POST(req: NextRequest) {
 
   const { title, description, assignedToName, dueDate, status } = await req.json();
 
-  const { data: systemContext } = await supabase
-    .from("SystemContext")
-    .select("content")
-    .order("updatedAt", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const [{ data: systemContext }, knowledgeBlock] = await Promise.all([
+    supabase
+      .from("SystemContext")
+      .select("content")
+      .order("updatedAt", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    getKnowledgeBlock(supabase),
+  ]);
 
   const systemPrompt = `You are drafting a short internal follow-up message for a Dotsure leader to send to a colleague about an overdue or upcoming task.
 
 ${systemContext?.content || ""}
+${knowledgeBlock}
 
 ${DOTSURE_GUARDRAILS}
 

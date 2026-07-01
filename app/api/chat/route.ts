@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { anthropic, CLAUDE_MODEL, DOTSURE_GUARDRAILS } from "@/lib/anthropic";
 import { createClient } from "@/lib/supabase-server";
+import { getKnowledgeBlock } from "@/lib/knowledge";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
 
   const canPersist = !!user && !!save;
 
-  const [{ data: profile }, { data: systemContext }] = await Promise.all([
+  const [{ data: profile }, { data: systemContext }, knowledgeBlock] = await Promise.all([
     user
       ? supabase.from("UserProfile").select("*").eq("id", user.id).maybeSingle()
       : Promise.resolve({ data: null }),
@@ -36,6 +37,7 @@ export async function POST(req: NextRequest) {
       .order("updatedAt", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    getKnowledgeBlock(supabase),
   ]);
 
   const systemPrompt = `You are the Dotsure Leader OS AI assistant, embedded in the Workspace module.
@@ -45,6 +47,7 @@ You are speaking with ${profile?.full_name || "a Dotsure leader"}, ${
   } in the ${profile?.department || "unspecified"} department.
 
 ${systemContext?.content || ""}
+${knowledgeBlock}
 
 ${DOTSURE_GUARDRAILS}
 

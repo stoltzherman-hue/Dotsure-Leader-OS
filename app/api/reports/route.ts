@@ -3,6 +3,7 @@ import ExcelJS from "exceljs";
 import { Readable } from "stream";
 import { anthropic, CLAUDE_MODEL, DOTSURE_GUARDRAILS } from "@/lib/anthropic";
 import { createClient } from "@/lib/supabase-server";
+import { getKnowledgeBlock } from "@/lib/knowledge";
 
 const SKIP_AUTH = process.env.NEXT_PUBLIC_SKIP_AUTH === "true";
 const MAX_ROWS = 500;
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest) {
 
   const { text: dataText, truncated } = rowsToText(worksheet);
 
-  const [{ data: profile }, { data: systemContext }] = await Promise.all([
+  const [{ data: profile }, { data: systemContext }, knowledgeBlock] = await Promise.all([
     user
       ? supabase.from("UserProfile").select("*").eq("id", user.id).maybeSingle()
       : Promise.resolve({ data: null }),
@@ -80,6 +81,7 @@ export async function POST(req: NextRequest) {
       .order("updatedAt", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    getKnowledgeBlock(supabase),
   ]);
 
   const systemPrompt = `You are the Dotsure Leader OS Reports analyst.
@@ -89,6 +91,7 @@ You are preparing an analysis for ${profile?.full_name || "a Dotsure leader"}, $
   } in the ${profile?.department || "unspecified"} department.
 
 ${systemContext?.content || ""}
+${knowledgeBlock}
 
 ${DOTSURE_GUARDRAILS}
 

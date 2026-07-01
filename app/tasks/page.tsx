@@ -131,8 +131,8 @@ export default function TasksPage() {
   });
 
   return (
-    <div className="flex h-full gap-6">
-      <div className="w-72 shrink-0">
+    <div className="flex flex-col lg:flex-row h-full gap-6">
+      <div className="w-full lg:w-72 lg:shrink-0">
         <form onSubmit={handleCreate} className="card p-4 flex flex-col gap-3">
           <p className="label">New task</p>
           <input
@@ -200,8 +200,8 @@ export default function TasksPage() {
         )}
       </div>
 
-      <div className="flex-1 flex flex-col gap-3">
-        <div className="flex gap-2">
+      <div className="flex-1 flex flex-col gap-3 min-w-0">
+        <div className="flex gap-2 flex-wrap">
           {FILTERS.map((f) => (
             <button
               key={f}
@@ -220,15 +220,15 @@ export default function TasksPage() {
         <div className="flex-1 overflow-y-auto flex flex-col gap-2">
           {visibleTasks.map((task) => (
             <div key={task.id} className="card p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div>
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="min-w-0">
                   <p className="text-text-primary font-medium">{task.title}</p>
                   {task.description && (
                     <p className="text-text-secondary text-sm mt-1">
                       {task.description}
                     </p>
                   )}
-                  <div className="flex items-center gap-3 mt-2 text-xs text-text-muted">
+                  <div className="flex items-center gap-3 mt-2 text-xs text-text-muted flex-wrap">
                     <span className={priorityClass(task.priority)}>
                       {task.priority}
                     </span>
