@@ -26,7 +26,9 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   const isPublic = PUBLIC_PATHS.includes(pathname);
   const isOnboarding = pathname === "/onboarding";
-  const needsOnboarding = !!user && !!profile && !profile.onboarded;
+  // A brand-new user has no UserProfile row at all yet (not just
+  // onboarded: false) - treat "no profile" the same as "not onboarded".
+  const needsOnboarding = !!user && (!profile || !profile.onboarded);
 
   useEffect(() => {
     if (SKIP_AUTH || loading) return;
