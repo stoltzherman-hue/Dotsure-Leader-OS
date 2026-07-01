@@ -19,12 +19,13 @@ Herman Stoltz, General Manager at Dotsure Limited (FSP39925) / Dotsure Life Limi
 
 ## CRITICAL — TWO PRODUCTS, NEVER CONFUSE THEM
 
-### Product 1: Dotsure Build Harness (EXISTING — DO NOT TOUCH)
+### Product 1: Dotsure Build Harness (EXISTING — standalone, own database)
 - Live: https://dotsure-build-harness.vercel.app
 - Repo: https://github.com/stoltzherman-hue/dotsure-build-harness
 - Supabase: guwqrtxfnymhmrgqgavx
 - Status: Complete, standalone, live in production
-- Action: Nothing. Leave it exactly as-is. No code changes. No database changes.
+- The Builds module in Leader OS does NOT reimplement the harness's agent pipeline. It links out to the harness for assessment. The harness's own pipeline (apps/web/app/pipeline/page.tsx, AUTO mode) computes a verdict after the Tech Architect and Governance Assessor stages: a LOW-risk idea needing no new infrastructure can be self-served (build it yourself, no approval needed); anything else stops, generates the full document set, and registers a project + approval request for stakeholder sign-off.
+- Code changes to the harness ARE permitted when explicitly requested and directly serve this pass/escalate integration — as of 2026-07-01 this is the one exception to "standalone." Do not change unrelated harness functionality without asking first. Database changes still require explicit confirmation (own Supabase project, separate from Leader OS).
 
 ### Product 2: Dotsure Leader OS (THIS PROJECT)
 - New GitHub repo: dotsure-leader-os
